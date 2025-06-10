@@ -1,0 +1,20 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: retrain-sql-model
+spec:
+  schedule: "0 2 * * 1"  # Every Monday at 2AM
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+            - name: retrainer
+              image: nerzid/sql-retrainer:latest
+              envFrom:
+                - secretRef:
+                    name: postgres-credentials
+              env:
+                - name: HF_MODEL
+                  value: "nerzid/qwen2.5-3B-4bit-text2sql"
+          restartPolicy: OnFailure
