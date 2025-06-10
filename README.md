@@ -205,3 +205,7 @@ docker run -p 8000:8000 ghcr.io/nerzid/text2sql:latest
 ```bash
  PYTHONPATH=. pytest -v
 ```
+
+## Acknowledgements
+
+- [WikiSQL dataset](https://github.com/salesforce/WikiSQL) by Salesforce Research was used for training and evaluating the text-to-SQL models.
