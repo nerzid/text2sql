@@ -8,6 +8,66 @@ A FastAPI application that converts natural language to SQL queries and detects 
 - AI-generated text detection
 - Feedback collection for model improvement
 
+## Preface
+
+My laptop is on the low-end in terms of GPU power (VRAM, operation speed, etc.), therefore, the solutions I provide are meant to be just prototypes that work, but not necessarily perform good enough for production.
+In addition, since I don’t know the tech stack used in your ecosystem (e.g., cloud provider, LLM provider, version control system, etc.), I made the following assumptions:
+
+- You use kubernetes for docker container orchestration, therefore I didn’t add any docker-compose files.
+- The project has access to the internet and has enough storage capacity to download and store files.
+- You use Redis for caching/queueing and PostgreSQL for storing data. The /feedback endpoint sends data to redis which is assumed to be handled by you and sent to PostgreSQL. Since I don’t have this setup on my laptop, I couldn't test if this pipeline works. However, it is the ideal setup that considers scaling as well.
+- The docker container or the project has access to GPU to run models. Ideally, there should be REST API endpoints for each model for serving LM services. For example, for LLMs, the best library for this (also the one I use in my workplace) is vLLM.
+- I used LM studio to serve qwen3-4B for /preprocess endpoint. If you want to use another provider (e.g., ollama), you can do so by changing `LLM_PROVIDER=“ollama”` in the .env file in the root directory. Don’t forget to export env file, otherwise the project will use the default provider, i.e., lmstudio (More on providers can be found here)
+- I used ChromaDB to vectorize headers from the WikiSQL dataset and keep them in the local environment as sqlite. Ideally, if you use kubernetes, ChromaDB should be centralized and have REST API access. Otherwise, ChromaDB should be kept in the server with a volume written in the docker-compose file.
+
+## Best Practices Followed
+
+- I used Hugging Face as a version control system for the models, which can be accessed [on my Hugging Face page](https://huggingface.co/nerzid)
+- I used FastAPI to serve the endpoints asynchronously  
+- I followed FastAPI’s best practices on organizing the project folders which allows for better scalability with its modular approach  
+- I added dockerization option for the project which can be connected to kubernetes  
+- I added CI/CD (see .github\workflows\ci.yml)  
+- I used Redis enqueue feedbacks which prevents the services from slowing down or freezing when there is high usage  
+- I prepares unit tests for the most important functions  
+- I added docstring for all functions  
+- I added exception handling rigorously  
+- I did a literature survey for the given tasks before attempting to implement my own, and used the existing approaches as base lines  
+
+## Project Structure
+
+project/  
+├── app/  
+│ ├── core/  
+│ │ ├── config.py # Application settings  
+│ │ ├── constants.py # Constants like prompt templates  
+│ │ └── dependencies.py # Dependency injection (Redis)  
+│ ├── chromadb/  
+│ │ └── client.py # ChromaDB client for vector storage  
+│ ├── llm/  
+│ │ ├── config.py # LLM configuration  
+│ │ ├── predictors.py # DSPy predictors  
+│ │ └── signatures.py # DSPy model signatures  
+│ ├── schemas/  
+│ │ └── base_models.py # Pydantic models for API  
+│ ├── services/  
+│ │ ├── ai_detector.py # AI-generated text detection  
+│ │ └── text_to_sql.py # Text-to-SQL conversion  
+│ └── main.py # FastAPI application  
+├── notebooks/  
+│ ├── approach1.ipynb # AI detection approach 1  
+│ └── approach2.ipynb # AI detection approach 2  
+├── tests/  
+│ └── test_main.py # API tests  
+├── improve_lm_performance/  
+│ └── Dockerfile # For model retraining  
+├── static/ # Static files  
+├── .github/workflows/  
+│ └── ci.yml # CI pipeline  
+├── Dockerfile # Main application Dockerfile  
+├── requirements.txt # Python dependencies  
+├── run.py # Application entry point  
+└── README.md # Project documentation  
+
 ## How to Run
 
 For is_ai_generated endpoint:
